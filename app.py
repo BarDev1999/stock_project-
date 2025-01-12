@@ -1,34 +1,70 @@
-import streamlit as st
 import yfinance as yf
-
-# כותרת ראשית
-st.title("Stock Financial Metrics")
-
-# שדה להזנת המניה
-ticker = st.text_input("Enter a stock ticker (e.g., AAPL, MSFT)")
 
 # פונקציה לשליפת נתונים
 def get_stock_metrics(ticker):
     try:
         stock = yf.Ticker(ticker)
-        st.write("Fetching data for:", ticker)  # דיבוג
         financials = stock.financials
         balance_sheet = stock.balance_sheet
         cash_flow = stock.cashflow
 
-        # בדיקה אם הנתונים ריקים
-        if financials.empty or balance_sheet.empty or cash_flow.empty:
-            st.error("No data available for this ticker. It might not exist or lack financial data.")
-            return None
-
+        # בדיקת זמינות נתונים ושימוש ב-iloc
         metrics = {
-            "Revenue (TTM)": financials.loc['Total Revenue'][0],
-            "Net Income (TTM)": financials.loc['Net Income'][0],
-            "Free Cash Flow (TTM)": cash_flow.loc['Total Cash From Operating Activities'][0],
-            "Shares Outstanding": balance_sheet.loc['Common Stock'][0],
-            "Long-Term Liabilities": balance_sheet.loc['Long Term Liabilities'][0],
+            "Revenue (TTM)": financials.loc['Total Revenue'].iloc[0] if 'Total Revenue' in financials.index else "N/A",
+            "Net Income (TTM)": financials.loc['Net Income'].iloc[0] if 'Net Income' in financials.index else "N/A",
+            "Free Cash Flow (TTM)": cash_flow.loc['Total Cash From Operating Activities'].iloc[0] if 'Total Cash From Operating Activities' in cash_flow.index else "N/A",
+            "Shares Outstanding": balance_sheet.loc['Common Stock'].iloc[0] if 'Common Stock' in balance_sheet.index else "N/A",
+            "Long-Term Liabilities": balance_sheet.loc['Long Term Liabilities'].iloc[0] if 'Long Term Liabilities' in balance_sheet.index else "N/A",
         }
         return metrics
     except Exception as e:
-        st.error(f"Error retrieving data for {ticker}: {e}")
+        print(f"Error: {e}")
         return None
+
+# הרצה רגילה בטרמינל
+
+if __name__ == "__main__":
+    # קבלת קלט מהמשתמש
+    ticker_symbol = input("Enter a stock ticker (e.g., AAPL): ").upper()
+
+    # יצירת אובייקט Ticker
+    ticker = yf.Ticker(ticker_symbol)
+
+    # בדיקת זמינות מידע
+    info = ticker.info
+    if not info:
+        print("No data available for this ticker. Please try another one.")
+    else:
+        # סיכום מידע כללי
+        print(f"Company: {info.get('longName', 'N/A')}")
+        print(f"Sector: {info.get('sector', 'N/A')}")
+        print(f"Industry: {info.get('industry', 'N/A')}")
+        print(f"Market Cap: {info.get('marketCap', 'N/A')}")
+        print(f"Current Price: {info.get('currentPrice', 'N/A')}")
+        print(f"Dividend Yield: {info.get('dividendYield', 'N/A')}")
+
+        # דוחות פיננסיים
+        financials = ticker.financials
+        if not financials.empty:
+            print("\nFinancials (last reported year):")
+            print(financials)
+        else:
+            print("\nNo financial data available.")
+
+        # תמחור שוק
+        print("\nMarket Metrics:")
+        print(f"Trailing PE: {info.get('trailingPE', 'N/A')}")
+        print(f"Forward PE: {info.get('forwardPE', 'N/A')}")
+        print(f"Price to Sales: {info.get('priceToSalesTrailing12Months', 'N/A')}")
+
+
+
+
+"""    result = get_stock_metrics(ticker)
+    if result:
+        print("\nFinancial Metrics:")
+        for key, value in result.items():
+            print(f"{key}: {value}")
+    else:
+       print("Could not retrieve data. Please try another ticker.")
+"""
