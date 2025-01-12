@@ -1,70 +1,64 @@
 import yfinance as yf
+yf.pdr_override() 
+from pandas_datareader import data as pdr
 
-# פונקציה לשליפת נתונים
-def get_stock_metrics(ticker):
-    try:
-        stock = yf.Ticker(ticker)
-        financials = stock.financials
-        balance_sheet = stock.balance_sheet
-        cash_flow = stock.cashflow
 
-        # בדיקת זמינות נתונים ושימוש ב-iloc
-        metrics = {
-            "Revenue (TTM)": financials.loc['Total Revenue'].iloc[0] if 'Total Revenue' in financials.index else "N/A",
-            "Net Income (TTM)": financials.loc['Net Income'].iloc[0] if 'Net Income' in financials.index else "N/A",
-            "Free Cash Flow (TTM)": cash_flow.loc['Total Cash From Operating Activities'].iloc[0] if 'Total Cash From Operating Activities' in cash_flow.index else "N/A",
-            "Shares Outstanding": balance_sheet.loc['Common Stock'].iloc[0] if 'Common Stock' in balance_sheet.index else "N/A",
-            "Long-Term Liabilities": balance_sheet.loc['Long Term Liabilities'].iloc[0] if 'Long Term Liabilities' in balance_sheet.index else "N/A",
-        }
-        return metrics
-    except Exception as e:
-        print(f"Error: {e}")
-        return None
-
-# הרצה רגילה בטרמינל
-
-if __name__ == "__main__":
-    # קבלת קלט מהמשתמש
-    ticker_symbol = input("Enter a stock ticker (e.g., AAPL): ").upper()
-
-    # יצירת אובייקט Ticker
+def extended_info(ticker_symbol):
     ticker = yf.Ticker(ticker_symbol)
-
-    # בדיקת זמינות מידע
     info = ticker.info
-    if not info:
-        print("No data available for this ticker. Please try another one.")
-    else:
-        # סיכום מידע כללי
-        print(f"Company: {info.get('longName', 'N/A')}")
-        print(f"Sector: {info.get('sector', 'N/A')}")
-        print(f"Industry: {info.get('industry', 'N/A')}")
-        print(f"Market Cap: {info.get('marketCap', 'N/A')}")
-        print(f"Current Price: {info.get('currentPrice', 'N/A')}")
-        print(f"Dividend Yield: {info.get('dividendYield', 'N/A')}")
 
-        # דוחות פיננסיים
-        financials = ticker.financials
-        if not financials.empty:
-            print("\nFinancials (last reported year):")
-            print(financials)
+    # Extended Information
+    result = { 
+        "Market Cap": info.get("marketCap", "N/A"),
+        "Revenue (TTM)": info.get("totalRevenue", "N/A"),
+        "Net Income (TTM)": info.get("netIncomeToCommon", "N/A"),
+        "5Yr Avg Net Income": "N/A",  # Placeholder (requires calculation)
+        "P/E (TTM)": info.get("trailingPE", "N/A"),
+        "5Yr P/E": "N/A",  # Placeholder (requires calculation)
+        "PS Ratio": info.get("priceToSalesTrailing12Months", "N/A"),
+        "Profit Margin (TTM)": info.get("profitMargins", "N/A"),
+        "5Yr Profit Margin": "N/A",  # Placeholder (requires calculation)
+        "Gross Profit Margin (TTM)": info.get("grossMargins", "N/A"),
+        "3Yr Compound Revenue Growth": "N/A",  # Placeholder (requires calculation)
+        "5Yr Compound Revenue Growth": "N/A",  # Placeholder (requires calculation)
+        "10Yr Compound Revenue Growth": "N/A",  # Placeholder (requires calculation)
+        "Free Cash Flow (TTM)": info.get("freeCashflow", "N/A"),
+        "5Yr Avg FCF (TTM)": "N/A",  # Placeholder (requires calculation)
+        "Price/FCF (TTM)": "N/A",  # Placeholder (requires calculation)
+        "5Yr Avg Price/FCF": "N/A",  # Placeholder (requires calculation)
+        "Dividend Yield (TTM)": info.get("dividendYield", "N/A"),
+        "Dividends Paid": "N/A",  # Placeholder (requires calculation)
+        "Forward Dividend Yield": "N/A",  # Placeholder (requires calculation)
+        "Enterprise Value (Traditional)": info.get("enterpriseValue", "N/A"),
+        "Return on Assets": info.get("returnOnAssets", "N/A"),
+        "Return on Equity": info.get("returnOnEquity", "N/A"),
+        "Return on Invested Capital (TTM)": "N/A",  # Placeholder (requires calculation)
+        "5Yr Return on Invested Capital": "N/A",  # Placeholder (requires calculation)
+        "5Yr Compound Book Value Growth": "N/A",  # Placeholder (requires calculation)
+        "10Yr Compound Book Value Growth": "N/A",  # Placeholder (requires calculation)
+        "52 WK High": info.get("fiftyTwoWeekHigh", "N/A"),
+        "52 WK Low": info.get("fiftyTwoWeekLow", "N/A"),
+        "ATH": "N/A",  # Placeholder (requires calculation)
+        "25 Day MA": "N/A",  # Placeholder (requires calculation)
+        "50 Day MA": info.get("fiftyDayAverage", "N/A"),
+        "100 Day MA": "N/A",  # Placeholder (requires calculation)
+        "200 Day MA": info.get("twoHundredDayAverage", "N/A"),
+        "Free Cash (TTM)":info.get("freeCashFlow(TTM)","N/A")
+    }
+    return result
+
+def display_extended_info(ticker_symbol):
+    data = extended_info(ticker_symbol)
+    print("\n=== Extended Information ===")
+    print("=" * 50)
+    for key, value in data.items():
+        if isinstance(value, (int, float)):
+            print(f"{key}: {value:,.2f}")
         else:
-            print("\nNo financial data available.")
-
-        # תמחור שוק
-        print("\nMarket Metrics:")
-        print(f"Trailing PE: {info.get('trailingPE', 'N/A')}")
-        print(f"Forward PE: {info.get('forwardPE', 'N/A')}")
-        print(f"Price to Sales: {info.get('priceToSalesTrailing12Months', 'N/A')}")
-
-
-
-
-"""    result = get_stock_metrics(ticker)
-    if result:
-        print("\nFinancial Metrics:")
-        for key, value in result.items():
             print(f"{key}: {value}")
-    else:
-       print("Could not retrieve data. Please try another ticker.")
-"""
+    print("=" * 50)
+
+# Example usage
+if __name__ == "__main__":
+    ticker_symbol = input("Enter a stock ticker (e.g., AAPL): ").upper()
+    display_extended_info(ticker_symbol)
